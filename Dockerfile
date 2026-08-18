@@ -21,12 +21,12 @@ WORKDIR /var/www/html
 
 COPY . .
 
-# Définition de la variable pour autoriser Composer en root dans le conteneur
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
 RUN composer install --no-interaction --prefer-dist --no-progress --no-scripts
 
-RUN chown -R www-data:www-data /var/www/html/var
+# Crée le dossier var s'il n'existe pas, puis ajuste les permissions
+RUN mkdir -p /var/www/html/var && chown -R www-data:www-data /var/www/html/var
 
 EXPOSE 8000
 
