@@ -1,4 +1,4 @@
-FROM php:8.3-cli
+FROM php:8.4-cli
 
 RUN apt-get update && apt-get install -y \
     git \
@@ -21,11 +21,11 @@ WORKDIR /var/www/html
 
 COPY . .
 
-# Définir l'environnement de production pour composer
+# Définition de la variable pour autoriser Composer en root dans le conteneur
 ENV COMPOSER_ALLOW_SUPERUSER=1
+
 RUN composer install --no-interaction --prefer-dist --no-progress --no-scripts
 
-# Donner les permissions d'écriture sur le dossier var (logs & cache)
 RUN chown -R www-data:www-data /var/www/html/var
 
 EXPOSE 8000
