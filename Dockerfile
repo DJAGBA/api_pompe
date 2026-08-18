@@ -21,9 +21,12 @@ WORKDIR /var/www/html
 
 COPY . .
 
+# Définir l'environnement de production pour composer
+ENV COMPOSER_ALLOW_SUPERUSER=1
 RUN composer install --no-interaction --prefer-dist --no-progress --no-scripts
 
-RUN php bin/console cache:clear
+# Donner les permissions d'écriture sur le dossier var (logs & cache)
+RUN chown -R www-data:www-data /var/www/html/var
 
 EXPOSE 8000
 
