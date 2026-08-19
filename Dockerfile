@@ -1,33 +1,36 @@
-FROM php:8.4-cli
+FROM php:8.4-fpm
 
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
     libpq-dev \
-    libicu-dev \
-    libzip-dev \
-    && docker-php-ext-install \
-    pdo \
-    pdo_pgsql \
-    pgsql \
-    intl \
+    libonig-dev \
+    libxml2-dev \
     zip \
-    opcache \
-    && rm -rf /var/lib/apt/lists/*
+    curl \
+    supervisor \
+    && docker-php-ext-install pdo_pgsql pgsql mbstring exif pcntl bcmath gd xml
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
+COPY composer.json composer.lock ./
+
+RUN composer install --no-dev --optimize-autoloader
+
 COPY . .
 
-ENV COMPOSER_ALLOW_SUPERUSER=1
 
-RUN composer install --no-interaction --prefer-dist --no-progress --no-scripts
+RUN chown -R www-data:www-data /var/www/html/var /var/www/html/public
 
-# Crée le dossier var s'il n'existe pas, puis ajuste les permissions
-RUN mkdir -p /var/www/html/var && chown -R www-data:www-data /var/www/html/var
+RUN mkdir -p /var/log/supervisor
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-EXPOSE 8000
+EXPOSE 80
 
-CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
