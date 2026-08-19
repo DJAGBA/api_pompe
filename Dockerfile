@@ -22,12 +22,17 @@ WORKDIR /var/www/html
 COPY . .
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
+ENV APP_ENV=prod
 
-RUN composer install --no-interaction --prefer-dist --no-progress --no-scripts
+# Installation des dépendances sans scripts pour éviter les erreurs de build
+RUN composer install --no-dev --no-interaction --prefer-dist --no-progress --no-scripts --optimize-autoloader
 
-# Crée le dossier var s'il n'existe pas, puis ajuste les permissions
+# Création du dossier var et gestion des permissions
 RUN mkdir -p /var/www/html/var && chown -R www-data:www-data /var/www/html/var
 
-EXPOSE 8000
+# Port par défaut si $PORT n'est pas fourni par l'environnement
+ENV PORT=8000
+EXPOSE ${PORT}
 
-CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
+# Lancement du serveur PHP sur le port dynamique $PORT
+CMD ["sh", "-c", "php -S 0.0.0.0:${PORT:-8000} -t public"]
